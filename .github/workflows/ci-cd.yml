@@ -1,0 +1,61 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install dependencies and run tests
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python -m unittest discover -s tests -p '*_test.py'
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Run application with dynamic arguments and save output
+      run: |
+        echo "Running application with dynamic arguments..."
+        python calculator.py $BASE $EXPONENT > result.txt
+
+      env:
+        BASE: 2.5  # Динамическое значение основания
+        EXPONENT: 3  # Динамическое значение показателя степени
+
+    - name: Upload result as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: result
+        path: result.txt
